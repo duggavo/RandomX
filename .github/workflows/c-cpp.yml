@@ -55,23 +55,19 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: linux-${{ matrix.config.arch }}.a
+        name: linux-${{ matrix.config.arch }}
         path: build/librandomx.a
 
-  build-windows-msys2:
+  build-windows-msbuild:
 
-    timeout-minutes: 15
-    runs-on: windows-latest
+    timeout-minutes: 5
+    runs-on: windows-${{ matrix.config.os }}
 
     strategy:
       matrix:
         config:
-          - {c: "gcc", cxx: "g++"}
-          - {c: "clang", cxx: "clang++"}
-
-    defaults:
-      run:
-        shell: msys2 {0}
+          - {arch: x64, os: 2022, vs: Visual Studio 17 2022, msbuild: "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Msbuild\\Current\\Bin\\amd64\\"}
+          - {arch: Win32, os: 2022, vs: Visual Studio 17 2022, msbuild: "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Msbuild\\Current\\Bin\\"}
 
     steps:
     - name: Checkout repository
@@ -79,28 +75,24 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Setup MSYS2
-      uses: eine/setup-msys2@v2
-      with:
-        update: true
-        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-clang mingw-w64-x86_64-lld mingw-w64-x86_64-cmake make
+    - name: Setup cmake
+      uses: lukka/get-cmake@latest
 
     - name: Build RandomX
       run: |
         mkdir build
         cd build
-        cmake .. -G "Unix Makefiles" -DCMAKE_C_COMPILER=${{ matrix.config.c }} -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }}
-        make -j$(nproc)
-
+        cmake .. -G "${{ matrix.config.vs }}" -A ${{ matrix.config.arch }}
+        & "${{ matrix.config.msbuild }}msbuild" -v:m /m /p:Configuration=Release randomx-tests.vcxproj
     - name: Run tests
       run: |
-        build/randomx-tests.exe
-
+        build/Release/randomx-tests.exe
     - uses: actions/upload-artifact@v4
       with:
-        name: windows-x86_64
+        name: librandomx-windows-msbuild
+        path: build/randomx.dll
+        name: windows-${{ matrix.config.arch }}
         path: build
-
   build-macos:
 
     timeout-minutes: 5
@@ -132,5 +124,5 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: librandomx-macos
+        name: macos-x86_64
         path: build/librandomx.a
