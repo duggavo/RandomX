@@ -89,10 +89,8 @@ jobs:
         build/Release/randomx-tests.exe
     - uses: actions/upload-artifact@v4
       with:
-        name: librandomx-windows-msbuild
-        path: build/randomx.dll
         name: windows-${{ matrix.config.arch }}
-        path: build
+        path: build/librandomx.a
   build-macos:
 
     timeout-minutes: 5
