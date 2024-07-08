@@ -94,7 +94,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: librandomx.a
+        name: librandomx-ubuntu.a
         path: build/librandomx.a
 
   build-windows-msys2:
